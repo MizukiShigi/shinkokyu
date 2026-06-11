@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// ホーム: ロゴ / 円形ボタン(画面の重心) / 今週の回数。これ以上増やさない。
+/// 夜(19-5時)は深林の地に反転する — 寝る前に白い画面で眩しくさせない。
 struct HomeView: View {
     let weekCount: Int
+    let isNight: Bool
     let onStart: () -> Void
 
     @State private var pulsing = false
@@ -11,19 +13,21 @@ struct HomeView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Palette.homeGradTop, Palette.homeGradBottom],
+                colors: isNight
+                    ? [Palette.splashTop, Palette.splashBottom]
+                    : [Palette.homeGradTop, Palette.homeGradBottom],
                 startPoint: .top, endPoint: .bottom
             )
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 HStack(spacing: 9) {
-                    RippleMark()
+                    RippleMark(color: isNight ? Palette.kasumi : Palette.matsu)
                         .frame(width: 24, height: 24)
                     Text("森呼吸")
                         .font(AppFont.mincho(18, semiBold: true))
                         .tracking(4)
-                        .foregroundStyle(Palette.sumi)
+                        .foregroundStyle(isNight ? Palette.kasumi : Palette.sumi)
                 }
                 .padding(.top, 40)
 
@@ -32,7 +36,10 @@ struct HomeView: View {
                 ZStack {
                     // 外輪: 12秒周期(呼吸ループと同じ)で静かに脈動
                     Circle()
-                        .stroke(Palette.wakaba.opacity(0.9), lineWidth: 1)
+                        .stroke(
+                            (isNight ? Palette.koke : Palette.wakaba).opacity(0.9),
+                            lineWidth: 1
+                        )
                         .frame(width: 294, height: 294)
                         .scaleEffect(pulsing ? 1.05 : 1.0)
                         .opacity(pulsing ? 0.25 : 0.55)
@@ -62,7 +69,12 @@ struct HomeView: View {
                             .foregroundStyle(Palette.washi)
                         }
                         .frame(width: 230, height: 230)
-                        .shadow(color: Palette.matsu.opacity(0.30), radius: 28, x: 0, y: 14)
+                        .shadow(
+                            color: isNight
+                                ? Palette.splashBottom.opacity(0.6)
+                                : Palette.matsu.opacity(0.30),
+                            radius: 28, x: 0, y: 14
+                        )
                     }
                     .buttonStyle(SinkButtonStyle())
                 }
@@ -72,7 +84,7 @@ struct HomeView: View {
                 Text("今週の森呼吸 \(weekCount)回")
                     .font(AppFont.gothic(12.5))
                     .tracking(1.75)
-                    .foregroundStyle(Palette.textSub)
+                    .foregroundStyle(isNight ? Palette.wakaba.opacity(0.85) : Palette.textSub)
                     .padding(.bottom, 32)
             }
         }
@@ -94,6 +106,10 @@ struct SinkButtonStyle: ButtonStyle {
     }
 }
 
-#Preview {
-    HomeView(weekCount: 2, onStart: {})
+#Preview("昼") {
+    HomeView(weekCount: 2, isNight: false, onStart: {})
+}
+
+#Preview("夜") {
+    HomeView(weekCount: 2, isNight: true, onStart: {})
 }

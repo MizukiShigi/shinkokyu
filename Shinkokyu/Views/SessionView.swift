@@ -144,6 +144,7 @@ struct SessionView: View {
                                     }
                                 }
                             }
+                            .accessibilityLabel(engine.isPaused ? "再開" : "一時停止")
                             .transition(.opacity)
                         }
 

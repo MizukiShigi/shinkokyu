@@ -20,7 +20,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
             if screen == .home {
-                HomeView(weekCount: weekCount, onStart: startSession)
+                HomeView(weekCount: weekCount, isNight: isNightHome, onStart: startSession)
                     .transition(.opacity)
             }
             if screen == .session {
@@ -38,6 +38,7 @@ struct RootView: View {
             }
         }
         .statusBarHidden(screen == .splash)
+        .preferredColorScheme(preferredScheme)
         .onAppear {
             // スプラッシュ1.2s滞在 → 0.8sフェード
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
@@ -50,6 +51,19 @@ struct RootView: View {
         }
         // バックグラウンド移行してもセッションは続く(UIBackgroundModes: audio)。
         // 環境音と鐘はロック中も鳴る。Hapticsと画面ガイドはiOSの仕様で停止する。
+    }
+
+    private var isNightHome: Bool {
+        SceneCatalog.bucket() == .night
+    }
+
+    /// ステータスバーの色を画面の地色に合わせる
+    private var preferredScheme: ColorScheme {
+        switch screen {
+        case .splash, .session: return .dark
+        case .home: return isNightHome ? .dark : .light
+        case .okaeri: return .light
+        }
     }
 
     private func go(_ s: Screen, duration: Double) {

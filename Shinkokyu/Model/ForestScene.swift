@@ -56,17 +56,34 @@ enum SceneCatalog {
         return Array(bucket[i...]) + Array(bucket[..<i])
     }
 
-    static func current(date: Date = Date()) -> ForestScene {
-        let cal = Calendar.current
-        let hour = cal.component(.hour, from: date)
-        let bucket: ForestScene.TimeBucket
-        switch hour {
-        case 5..<15:  bucket = .day
-        case 15..<19: bucket = .dusk
-        default:      bucket = .night
+    /// 現在の時間帯。ホームのダーク地切替にも使う。
+    /// デバッグ/スクリーンショット用に -forceBucket day|dusk|night で固定可能。
+    static func bucket(for date: Date = Date()) -> ForestScene.TimeBucket {
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-forceBucket"), i + 1 < args.count {
+            switch args[i + 1] {
+            case "day":   return .day
+            case "dusk":  return .dusk
+            case "night": return .night
+            default: break
+            }
         }
-        let candidates = all.filter { $0.bucket == bucket }
-        let dayOfYear = cal.ordinality(of: .day, in: .year, for: date) ?? 0
+        switch Calendar.current.component(.hour, from: date) {
+        case 5..<15:  return .day
+        case 15..<19: return .dusk
+        default:      return .night
+        }
+    }
+
+    static func current(date: Date = Date()) -> ForestScene {
+        // デバッグ/スクリーンショット用: -sceneID <id> で景を固定
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-sceneID"), i + 1 < args.count,
+           let forced = all.first(where: { $0.id == args[i + 1] }) {
+            return forced
+        }
+        let candidates = all.filter { $0.bucket == bucket(for: date) }
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 0
         return candidates[dayOfYear % candidates.count]
     }
 }
