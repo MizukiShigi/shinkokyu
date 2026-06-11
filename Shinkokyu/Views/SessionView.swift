@@ -116,6 +116,8 @@ struct SessionView: View {
 
                     Spacer()
 
+                    // 全要素の場所を常に確保し、透明度だけで出し入れする。
+                    // ボタンの出現でタイマーや円が持ち上がらないようにするため。
                     VStack(spacing: 16) {
                         Text(timeLabel)
                             .font(AppFont.gothic(16))
@@ -123,46 +125,47 @@ struct SessionView: View {
                             .monospacedDigit()
                             .foregroundStyle(.white.opacity(0.92))
 
-                        // 一時停止は呼吸が始まってから
-                        if introStep == .done {
-                            Button(action: { engine.togglePause() }) {
-                                ZStack {
-                                    Circle()
-                                        .stroke(.white.opacity(engine.isPaused ? 0.9 : 0.45), lineWidth: 1)
-                                        .frame(width: 46, height: 46)
-                                    if engine.isPaused {
-                                        PlayTriangle()
-                                            .fill(.white.opacity(0.9))
-                                            .frame(width: 13, height: 16)
-                                            .offset(x: 2)
-                                    } else {
-                                        HStack(spacing: 5) {
-                                            Capsule().frame(width: 3, height: 14)
-                                            Capsule().frame(width: 3, height: 14)
-                                        }
-                                        .foregroundStyle(.white.opacity(0.9))
+                        // 一時停止は呼吸が始まってから操作可能
+                        Button(action: { engine.togglePause() }) {
+                            ZStack {
+                                Circle()
+                                    .stroke(.white.opacity(engine.isPaused ? 0.9 : 0.45), lineWidth: 1)
+                                    .frame(width: 46, height: 46)
+                                if engine.isPaused {
+                                    PlayTriangle()
+                                        .fill(.white.opacity(0.9))
+                                        .frame(width: 13, height: 16)
+                                        .offset(x: 2)
+                                } else {
+                                    HStack(spacing: 5) {
+                                        Capsule().frame(width: 3, height: 14)
+                                        Capsule().frame(width: 3, height: 14)
                                     }
+                                    .foregroundStyle(.white.opacity(0.9))
                                 }
                             }
-                            .accessibilityLabel(engine.isPaused ? "再開" : "一時停止")
-                            .transition(.opacity)
                         }
+                        .accessibilityLabel(engine.isPaused ? "再開" : "一時停止")
+                        .opacity(introStep == .done ? 1 : 0)
+                        .allowsHitTesting(introStep == .done)
+                        .accessibilityHidden(introStep != .done)
 
                         // 一時停止中にだけ現れる、唯一の中断手段
-                        if engine.isPaused {
-                            Button(action: onAbort) {
-                                Text("おわる")
-                                    .font(AppFont.gothic(12.5))
-                                    .tracking(3.1)
-                                    .padding(.leading, 3.1)
-                                    .foregroundStyle(.white.opacity(0.7))
-                                    .padding(.vertical, 8)
-                                    .padding(.horizontal, 18)
-                            }
-                            .transition(.opacity)
+                        Button(action: onAbort) {
+                            Text("おわる")
+                                .font(AppFont.gothic(12.5))
+                                .tracking(3.1)
+                                .padding(.leading, 3.1)
+                                .foregroundStyle(.white.opacity(0.7))
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 18)
                         }
+                        .opacity(engine.isPaused ? 1 : 0)
+                        .allowsHitTesting(engine.isPaused)
+                        .accessibilityHidden(!engine.isPaused)
                     }
                     .animation(.easeInOut(duration: 0.5), value: engine.isPaused)
+                    .animation(.easeInOut(duration: 0.5), value: introStep)
                     .padding(.bottom, 64)
                 }
             }

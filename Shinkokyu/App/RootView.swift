@@ -12,6 +12,7 @@ struct RootView: View {
     @StateObject private var engine = SessionEngine()
     @State private var audio = AudioController()
     @State private var haptics = HapticsController()
+    @State private var nowPlaying = NowPlayingController()
 
     var body: some View {
         ZStack {
@@ -28,7 +29,11 @@ struct RootView: View {
                     engine: engine,
                     scene: forestScene,
                     onAbort: abortSession,
-                    onIntroFinished: { engine.start() }  // 導入(3・2・1)が終わってから呼吸開始
+                    onIntroFinished: {
+                        // 導入(3・2・1)が終わってから呼吸開始
+                        engine.start()
+                        nowPlaying.update(elapsed: 0, isPaused: false)
+                    }
                 )
                 .transition(.opacity)
             }
@@ -81,7 +86,7 @@ struct RootView: View {
             case .exhale: haptics?.playExhale()
             }
         }
-        engine.onPauseChange = { [weak audio, weak haptics] paused in
+        engine.onPauseChange = { [weak audio, weak haptics, weak engine, weak nowPlaying] paused in
             if paused {
                 audio?.pause()
                 haptics?.stop()
@@ -89,15 +94,20 @@ struct RootView: View {
                 audio?.resume()
                 // 呼吸は engine が「吸う」の頭から再開 → onPhaseChange でHapticsも追従
             }
+            let elapsed = SessionEngine.sessionLength - TimeInterval(engine?.remaining ?? 0)
+            nowPlaying?.update(elapsed: max(0, elapsed), isPaused: paused)
         }
         engine.onFinish = { finishSession() }
         audio.onInterruption = {
             if screen == .session && !engine.isPaused { engine.togglePause() }
         }
 
+        nowPlaying.onTogglePause = { [weak engine] in engine?.togglePause() }
+
         // 環境音はすぐ立ち上げ(2.0sフェードイン)、導入の間に音の空気を作る。
         // エンジンは導入が終わってから (onIntroFinished で start)
         audio.startSession(soundName: forestScene.soundName)
+        nowPlaying.begin(scene: forestScene, duration: SessionEngine.sessionLength)
         UIApplication.shared.isIdleTimerDisabled = true
         go(.session, duration: 1.1)
     }
@@ -106,6 +116,7 @@ struct RootView: View {
     private func finishSession() {
         audio.finishSession()
         haptics.stop()
+        nowPlaying.clear()
         UIApplication.shared.isIdleTimerDisabled = false
         WeeklyCounter.increment()
         weekCount = WeeklyCounter.thisWeek
@@ -117,6 +128,7 @@ struct RootView: View {
         engine.stop()
         audio.abort()
         haptics.stop()
+        nowPlaying.clear()
         UIApplication.shared.isIdleTimerDisabled = false
         go(.home, duration: 0.8)
     }
