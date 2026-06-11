@@ -21,6 +21,8 @@ struct SessionView: View {
     @State private var introStep: IntroStep = .hidden
     /// 導入の文字の明滅(内容の切替は不可視の間に行う)
     @State private var introOpacity: Double = 0
+    /// 呼吸ラベル(吸う/吐く+秒)。最初の数サイクルで覚えたら溶かして円に委ねる
+    @State private var phaseLabelOpacity: Double = 1
     @State private var currentScene: ForestScene
     @State private var currentPhoto: UIImage?
     @State private var sceneIndex = 0
@@ -31,6 +33,13 @@ struct SessionView: View {
     /// 写真の切替間隔(デモ時は10秒に短縮)
     private static var photoIntervalSeconds: Int {
         SessionEngine.sessionLength >= 180 ? 30 : 10
+    }
+
+    /// 呼吸ラベルを表示するサイクル数。これを過ぎたら溶かして円だけにする。
+    /// (本番は3サイクル=36秒、デモは1サイクル=12秒)
+    private static var labelFadeAfterSeconds: TimeInterval {
+        let cycles = SessionEngine.sessionLength >= 180 ? 3.0 : 1.0
+        return cycles * (SessionEngine.inhaleDuration + SessionEngine.exhaleDuration)
     }
 
     init(engine: SessionEngine, scene: ForestScene,
@@ -177,6 +186,7 @@ struct SessionView: View {
         }
         .onChange(of: engine.remaining) { _, remaining in
             advancePhotoIfNeeded(remaining: remaining)
+            fadePhaseLabelIfNeeded(remaining: remaining)
         }
         .onChange(of: engine.phase) { _, newPhase in
             guard !engine.isPaused else { return }
@@ -255,6 +265,15 @@ struct SessionView: View {
         return UIImage(contentsOfFile: url.path)
     }
 
+    /// 最初の数サイクル(本番3回)を過ぎたら、吐き切ったところで呼吸ラベルを溶かす。
+    /// 以降は円の拡縮と明度変化だけで吸う/吐くを示す。
+    private func fadePhaseLabelIfNeeded(remaining: Int) {
+        let elapsed = Int(SessionEngine.sessionLength) - remaining
+        guard phaseLabelOpacity == 1,
+              elapsed >= Int(Self.labelFadeAfterSeconds) else { return }
+        withAnimation(.easeInOut(duration: 2.5)) { phaseLabelOpacity = 0 }
+    }
+
     /// 呼吸円: scale 1.00⇄1.28 / 輪郭 55⇄85% / 充填 10⇄18%
     private var breathingCircle: some View {
         let scale: CGFloat = reduceMotion ? 1.14 : (circleExpanded ? Self.expandedScale : 1.0)
@@ -278,11 +297,9 @@ struct SessionView: View {
             .frame(width: 176, height: 176)
             .scaleEffect(scale)
 
-            // 円の中身: 導入メッセージ → 3・2・1 → 吸う/吐く
+            // 導入の文字: メッセージ → 3・2・1 (呼吸が始まると消える)
             Group {
                 switch introStep {
-                case .hidden:
-                    EmptyView()
                 case .message:
                     Text("森の中にいることを\n想像して、ゆっくり\n深呼吸しましょう")
                         .font(AppFont.mincho(13.5))
@@ -294,25 +311,34 @@ struct SessionView: View {
                     Text("\(n)")
                         .font(AppFont.mincho(40))
                         .foregroundStyle(.white.opacity(0.95))
-                case .done:
-                    VStack(spacing: 8) {
-                        Text(isInhale ? "吸う" : "吐く")
-                            .font(AppFont.gothic(19))
-                            .tracking(6.5)
-                            .padding(.leading, 6.5)
-                            .foregroundStyle(.white.opacity(0.95))
-                        Text("\(engine.phaseRemaining)秒")
-                            .font(AppFont.gothic(11))
-                            .tracking(2)
-                            .padding(.leading, 2)
-                            .monospacedDigit()
-                            .foregroundStyle(.white.opacity(0.66))
-                    }
+                case .hidden, .done:
+                    EmptyView()
                 }
             }
             // 内容の切替は即時(不可視の間に行う)。明滅は外側の opacity が担う
             .transaction { $0.animation = nil }
             .opacity(introOpacity)
+
+            // 呼吸ラベル: 最初の数サイクルで覚えたら溶けて、以降は円だけに委ねる
+            if introStep == .done {
+                VStack(spacing: 8) {
+                    Text(isInhale ? "吸う" : "吐く")
+                        .font(AppFont.gothic(19))
+                        .tracking(6.5)
+                        .padding(.leading, 6.5)
+                        .foregroundStyle(.white.opacity(0.95))
+                    Text("\(engine.phaseRemaining)秒")
+                        .font(AppFont.gothic(11))
+                        .tracking(2)
+                        .padding(.leading, 2)
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.66))
+                }
+                // 文字切替は即時。フェードイン(introOpacity)と数サイクル後のフェードアウト
+                // (phaseLabelOpacity)は外側の opacity が担う
+                .transaction { $0.animation = nil }
+                .opacity(introOpacity * phaseLabelOpacity)
+            }
         }
         .frame(width: 280, height: 280)
     }
