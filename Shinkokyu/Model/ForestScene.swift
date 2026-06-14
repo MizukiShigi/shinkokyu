@@ -44,7 +44,7 @@ enum SceneCatalog {
               info: "新緑・静かな池", soundName: "ambient-birds-spring", bucket: .day),
         .init(id: "inokashira", photoName: "photo-inokashira-stream", place: "東京・井の頭公園",
               info: "木立を抜ける小川", soundName: "ambient-stream-close", bucket: .day),
-        .init(id: "dokkonuma", photoName: "photo-dokkonuma", place: "山形・蔵王 どっこ沼",
+        .init(id: "dokkonuma", photoName: "photo-dokkonuma", place: "山形・蔵王 ドッコ沼",
               info: "紅葉の沼", soundName: "ambient-forest-afternoon", bucket: .day),
         .init(id: "torikabuto", photoName: "photo-torikabuto", place: "山形・蔵王 鳥兜山",
               info: "秋の山並み", soundName: "ambient-forest-afternoon", bucket: .day),
