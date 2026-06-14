@@ -64,7 +64,7 @@ enum SceneCatalog {
 
     /// セッション中の写真ローテーション: 全景をシャッフルして起点の景から始まる順で返す
     static func rotation(startingAt scene: ForestScene) -> [ForestScene] {
-        var others = all.filter { $0.id != scene.id }.shuffled()
+        let others = all.filter { $0.id != scene.id }.shuffled()
         return [scene] + others
     }
 
