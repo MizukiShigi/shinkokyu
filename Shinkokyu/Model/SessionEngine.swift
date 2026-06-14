@@ -21,7 +21,6 @@ final class SessionEngine: ObservableObject {
     @Published private(set) var phaseRemaining: Int = Int(inhaleDuration)
     @Published private(set) var isPaused = false
 
-    var onPhaseChange: ((BreathPhase) -> Void)?
     var onPauseChange: ((Bool) -> Void)?
     var onFinish: (() -> Void)?
 
@@ -47,6 +46,10 @@ final class SessionEngine: ObservableObject {
     func stop() {
         timer?.invalidate()
         timer = nil
+        isPaused = false
+        remaining = Int(Self.sessionLength)
+        phase = .inhale
+        phaseRemaining = Int(Self.inhaleDuration)
     }
 
     func togglePause() {
@@ -55,6 +58,12 @@ final class SessionEngine: ObservableObject {
 
     private func pause() {
         guard !isPaused else { return }
+        // 呼吸中(タイマー稼働中)のみ途中経過を累計に確定する。
+        // イントロ中(timer == nil)は呼吸状態に触れない。
+        if timer != nil {
+            let inPhase = Date.now.timeIntervalSince(phaseStart)
+            completedTime += min(inPhase, phaseDuration)
+        }
         isPaused = true
         onPauseChange?(true)
     }
@@ -62,7 +71,9 @@ final class SessionEngine: ObservableObject {
     private func resume() {
         guard isPaused else { return }
         isPaused = false
-        beginPhase(.inhale)
+        if timer != nil {
+            beginPhase(.inhale)   // 再開は常に「吸う」の頭から
+        }
         onPauseChange?(false)
     }
 
@@ -70,7 +81,6 @@ final class SessionEngine: ObservableObject {
         phase = p
         phaseStart = .now
         phaseRemaining = Int(p == .inhale ? Self.inhaleDuration : Self.exhaleDuration)
-        onPhaseChange?(p)
     }
 
     private var phaseDuration: TimeInterval {

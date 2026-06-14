@@ -1,6 +1,6 @@
 import AVFoundation
 
-/// 環境音(3分半のフィールドレコーディング)と終了の鐘。
+/// 環境音(フィールドレコーディング)と終了の鐘。
 /// フェードはすべてランタイム: 開始2.0sフェードイン / 終了は鐘 + 6.0sフェードアウト。
 final class AudioController: NSObject {
 

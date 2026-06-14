@@ -21,11 +21,18 @@ struct SessionView: View {
     @State private var introStep: IntroStep = .hidden
     /// 導入の文字の明滅(内容の切替は不可視の間に行う)
     @State private var introOpacity: Double = 0
+    /// イントロの累計進行時間(秒)。一時停止を跨いでも止めた地点から再開するために保持する
+    @State private var introElapsed: TimeInterval = 0
+    /// 現在の実行区間の開始時刻。一時停止中は nil
+    @State private var introRunStart: Date?
+    /// 予約済みのイントロ・コールバック。一時停止時にまとめてキャンセルする
+    @State private var introWorkItems: [DispatchWorkItem] = []
     /// 呼吸ラベル(吸う/吐く+秒)。最初の数サイクルで覚えたら溶かして円に委ねる
     @State private var phaseLabelOpacity: Double = 1
     @State private var currentScene: ForestScene
     @State private var currentPhoto: UIImage?
     @State private var sceneIndex = 0
+    @State private var sceneRotation: [ForestScene] = []
     /// 呼吸円の拡縮はフェーズ変化に明示的に紐付ける(吸う4秒で1.0→1.4 / 吐く8秒で1.4→1.0)
     @State private var circleExpanded = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -134,7 +141,8 @@ struct SessionView: View {
                             .monospacedDigit()
                             .foregroundStyle(.white.opacity(0.92))
 
-                        // 一時停止は呼吸が始まってから操作可能
+                        // 一時停止はイントロ中(最初のメッセージ以降)から操作可能。
+                        // イントロ中に止めても、止めた地点から再開できる。
                         Button(action: { engine.togglePause() }) {
                             ZStack {
                                 Circle()
@@ -155,9 +163,9 @@ struct SessionView: View {
                             }
                         }
                         .accessibilityLabel(engine.isPaused ? "再開" : "一時停止")
-                        .opacity(introStep == .done ? 1 : 0)
-                        .allowsHitTesting(introStep == .done)
-                        .accessibilityHidden(introStep != .done)
+                        .opacity(introStep == .hidden ? 0 : 1)
+                        .allowsHitTesting(introStep != .hidden)
+                        .accessibilityHidden(introStep == .hidden)
 
                         // 一時停止中にだけ現れる、唯一の中断手段
                         Button(action: onAbort) {
@@ -182,7 +190,12 @@ struct SessionView: View {
         .ignoresSafeArea() // 写真を物理画面いっぱいに
         .onAppear {
             currentPhoto = loadPhoto(scene)
-            scheduleIntro()
+            sceneRotation = SceneCatalog.rotation(startingAt: scene)
+            startIntro()
+        }
+        .onDisappear {
+            cancelIntroWorkItems()
+            introRunStart = nil
         }
         .onChange(of: engine.remaining) { _, remaining in
             advancePhotoIfNeeded(remaining: remaining)
@@ -198,49 +211,93 @@ struct SessionView: View {
             }
         }
         .onChange(of: engine.isPaused) { _, paused in
+            // イントロ中: 表示中の文字は凍結したまま、進行時間だけ止めて/再開する。
+            // 呼吸中: 円を基準サイズへ戻す / 吸うの頭から再開する。
+            if introStep != .done {
+                if paused { pauseIntro() } else { resumeIntro() }
+                return
+            }
             if paused {
-                // 停止中は静かに基準サイズへ戻す
                 withAnimation(.easeInOut(duration: 1.0)) { circleExpanded = false }
             } else {
-                // 再開は常に「吸う」の頭から
                 withAnimation(inhaleAnimation) { circleExpanded = true }
             }
         }
     }
 
-    /// 導入: 景色と環境音が立ち上がる → メッセージがゆっくり現れて消える
+    /// 導入のタイムライン(イントロ開始からの論理時間, 演出)。
+    /// 景色と環境音が立ち上がる → メッセージがゆっくり現れて消える
     /// → 3・2・1(それぞれ柔らかく明滅) → ひと呼吸おいて最初の「吸う」
-    private func scheduleIntro() {
-        func at(_ t: TimeInterval, _ action: @escaping () -> Void) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + t, execute: action)
-        }
+    private func introTimeline() -> [(t: TimeInterval, action: () -> Void)] {
+        var events: [(TimeInterval, () -> Void)] = []
         // メッセージ: 画面のクロスフェードが落ち着いてから、読む時間をとって静かに消える
-        at(0.8) {
+        events.append((0.8, {
             introStep = .message
             withAnimation(.easeInOut(duration: 1.2)) { introOpacity = 1 }
-        }
-        at(4.6) {
+        }))
+        events.append((4.6, {
             withAnimation(.easeInOut(duration: 0.6)) { introOpacity = 0 }
-        }
+        }))
         // 3・2・1: 1.8秒間隔(数字の間に0.5秒の静かな間)。
         // 3と2は短く明滅、1だけゆっくり溶けて呼吸へつながる
         for (i, n) in [3, 2, 1].enumerated() {
             let base = 5.4 + Double(i) * 1.8
-            at(base) {
+            events.append((base, {
                 introStep = .count(n)
                 withAnimation(.easeInOut(duration: 0.4)) { introOpacity = 1 }
-            }
-            at(base + 0.9) {
+            }))
+            events.append((base + 0.9, {
                 withAnimation(.easeInOut(duration: n == 1 ? 1.5 : 0.4)) { introOpacity = 0 }
-            }
+            }))
         }
         // 「1」(9.0表示) が溶けきった瞬間に最初の「吸う」が始まる
-        at(11.5) {
-            introStep = .done
-            onIntroFinished()
-            withAnimation(.easeInOut(duration: 0.5)) { introOpacity = 1 }
-            withAnimation(inhaleAnimation) { circleExpanded = true }
+        events.append((11.5, { finishIntro() }))
+        return events
+    }
+
+    private func startIntro() {
+        introElapsed = 0
+        runIntro(fromElapsed: 0)
+    }
+
+    /// 残りのイベントを、経過時間ぶん前倒しして予約し直す。
+    private func runIntro(fromElapsed elapsed: TimeInterval) {
+        cancelIntroWorkItems()
+        introElapsed = elapsed
+        introRunStart = Date()
+        for event in introTimeline() where event.t > elapsed + 0.001 {
+            let item = DispatchWorkItem { event.action() }
+            introWorkItems.append(item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + (event.t - elapsed), execute: item)
         }
+    }
+
+    /// 一時停止: 表示中の文字はそのまま凍結し、進行時間を確定して予約を取り消す。
+    private func pauseIntro() {
+        guard let start = introRunStart else { return }
+        introElapsed += Date().timeIntervalSince(start)
+        introRunStart = nil
+        cancelIntroWorkItems()
+    }
+
+    /// 再開: 止めた地点から残りのイベントを予約し直す。
+    private func resumeIntro() {
+        runIntro(fromElapsed: introElapsed)
+    }
+
+    private func cancelIntroWorkItems() {
+        introWorkItems.forEach { $0.cancel() }
+        introWorkItems.removeAll()
+    }
+
+    private func finishIntro() {
+        guard introStep != .done else { return }
+        introRunStart = nil
+        cancelIntroWorkItems()
+        introStep = .done
+        onIntroFinished()
+        withAnimation(.easeInOut(duration: 0.5)) { introOpacity = 1 }
+        withAnimation(inhaleAnimation) { circleExpanded = true }
     }
 
     /// 経過時間から写真インデックスを求め、進んでいたら次の景へクロスフェード。
@@ -251,8 +308,7 @@ struct SessionView: View {
         guard idx > sceneIndex else { return }
         sceneIndex = idx
 
-        let rotation = SceneCatalog.rotation(startingAt: scene)
-        let next = rotation[idx % rotation.count]
+        let next = sceneRotation[idx % sceneRotation.count]
         guard next.id != currentScene.id, let img = loadPhoto(next) else { return }
         withAnimation(.easeInOut(duration: 2.0)) {
             currentScene = next
@@ -322,10 +378,10 @@ struct SessionView: View {
             // 呼吸ラベル: 最初の数サイクルで覚えたら溶けて、以降は円だけに委ねる
             if introStep == .done {
                 VStack(spacing: 8) {
-                    Text(isInhale ? "吸う" : "吐く")
-                        .font(AppFont.gothic(19))
-                        .tracking(6.5)
-                        .padding(.leading, 6.5)
+                    Text(isInhale ? "鼻から吸う" : "口から吐く")
+                        .font(AppFont.gothic(15))
+                        .tracking(3)
+                        .padding(.leading, 3)
                         .foregroundStyle(.white.opacity(0.95))
                     Text("\(engine.phaseRemaining)秒")
                         .font(AppFont.gothic(11))

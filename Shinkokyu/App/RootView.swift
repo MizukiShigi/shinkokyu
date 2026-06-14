@@ -11,7 +11,6 @@ struct RootView: View {
 
     @StateObject private var engine = SessionEngine()
     @State private var audio = AudioController()
-    @State private var haptics = HapticsController()
     @State private var nowPlaying = NowPlayingController()
 
     var body: some View {
@@ -55,7 +54,7 @@ struct RootView: View {
             }
         }
         // バックグラウンド移行してもセッションは続く(UIBackgroundModes: audio)。
-        // 環境音と鐘はロック中も鳴る。Hapticsと画面ガイドはiOSの仕様で停止する。
+        // 環境音と鐘はロック中も鳴る。
     }
 
     private var isNightHome: Bool {
@@ -80,19 +79,11 @@ struct RootView: View {
     private func startSession() {
         forestScene = SceneCatalog.current()
 
-        engine.onPhaseChange = { [weak haptics] phase in
-            switch phase {
-            case .inhale: haptics?.playInhale()
-            case .exhale: haptics?.playExhale()
-            }
-        }
-        engine.onPauseChange = { [weak audio, weak haptics, weak engine, weak nowPlaying] paused in
+        engine.onPauseChange = { [weak audio, weak engine, weak nowPlaying] paused in
             if paused {
                 audio?.pause()
-                haptics?.stop()
             } else {
                 audio?.resume()
-                // 呼吸は engine が「吸う」の頭から再開 → onPhaseChange でHapticsも追従
             }
             let elapsed = SessionEngine.sessionLength - TimeInterval(engine?.remaining ?? 0)
             nowPlaying?.update(elapsed: max(0, elapsed), isPaused: paused)
@@ -115,7 +106,6 @@ struct RootView: View {
     /// 吐き切りの瞬間に呼ばれる: 鐘 → 環境音6sフェードアウト → おかえり
     private func finishSession() {
         audio.finishSession()
-        haptics.stop()
         nowPlaying.clear()
         UIApplication.shared.isIdleTimerDisabled = false
         WeeklyCounter.increment()
@@ -127,7 +117,6 @@ struct RootView: View {
     private func abortSession() {
         engine.stop()
         audio.abort()
-        haptics.stop()
         nowPlaying.clear()
         UIApplication.shared.isIdleTimerDisabled = false
         go(.home, duration: 0.8)

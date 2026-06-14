@@ -35,6 +35,19 @@ enum SceneCatalog {
               info: "静かな水面", soundName: "ambient-birds-spring", bucket: .day),
         .init(id: "azusagawa", photoName: "photo-azusagawa", place: "長野・上高地 梓川",
               info: "澄んだ流れ・秋", soundName: "ambient-stream-gentle", bucket: .day),
+        // ---- 追加(実写・東京/山形) ----
+        .init(id: "shakujii-heron", photoName: "photo-shakujii-heron", place: "東京・石神井公園",
+              info: "夏の木立・サギの巣", soundName: "ambient-birds-spring", bucket: .day),
+        .init(id: "shakujii-boardwalk", photoName: "photo-shakujii-boardwalk", place: "東京・石神井公園",
+              info: "夏の木道・池のほとり", soundName: "ambient-forest-afternoon", bucket: .day),
+        .init(id: "shakujii-pond", photoName: "photo-shakujii-pond", place: "東京・石神井公園",
+              info: "新緑・静かな池", soundName: "ambient-birds-spring", bucket: .day),
+        .init(id: "inokashira", photoName: "photo-inokashira-stream", place: "東京・井の頭公園",
+              info: "木立を抜ける小川", soundName: "ambient-stream-close", bucket: .day),
+        .init(id: "dokkonuma", photoName: "photo-dokkonuma", place: "山形・蔵王 どっこ沼",
+              info: "紅葉の沼", soundName: "ambient-forest-afternoon", bucket: .day),
+        .init(id: "torikabuto", photoName: "photo-torikabuto", place: "山形・蔵王 鳥兜山",
+              info: "秋の山並み", soundName: "ambient-forest-afternoon", bucket: .day),
         // ---- 夕 ----
         .init(id: "nachi", photoName: "photo-nachi-falls", place: "和歌山・那智の滝",
               info: "夕方の光・滝音", soundName: "ambient-river-falls", bucket: .dusk),
@@ -49,11 +62,10 @@ enum SceneCatalog {
               info: "星月夜", soundName: "ambient-birds-evening", bucket: .night),
     ]
 
-    /// セッション中の写真ローテーション: 同じ時間帯の景を、起点の景から順に巡る
+    /// セッション中の写真ローテーション: 全景をシャッフルして起点の景から始まる順で返す
     static func rotation(startingAt scene: ForestScene) -> [ForestScene] {
-        let bucket = all.filter { $0.bucket == scene.bucket }
-        guard let i = bucket.firstIndex(of: scene) else { return [scene] }
-        return Array(bucket[i...]) + Array(bucket[..<i])
+        var others = all.filter { $0.id != scene.id }.shuffled()
+        return [scene] + others
     }
 
     /// 現在の時間帯。ホームのダーク地切替にも使う。
@@ -82,8 +94,6 @@ enum SceneCatalog {
            let forced = all.first(where: { $0.id == args[i + 1] }) {
             return forced
         }
-        let candidates = all.filter { $0.bucket == bucket(for: date) }
-        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 0
-        return candidates[dayOfYear % candidates.count]
+        return all.randomElement()!
     }
 }
