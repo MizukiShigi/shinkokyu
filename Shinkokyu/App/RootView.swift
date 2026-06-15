@@ -78,6 +78,9 @@ struct RootView: View {
 
     private func startSession() {
         forestScene = SceneCatalog.current()
+        // 前回完走ぶんの残り(0:00)が次のイントロに残らないよう、表示を3:00へ初期化。
+        // 実際のタイマー開始は導入後 (onIntroFinished の engine.start)。
+        engine.stop()
 
         engine.onPauseChange = { [weak audio, weak engine, weak nowPlaying] paused in
             if paused {
