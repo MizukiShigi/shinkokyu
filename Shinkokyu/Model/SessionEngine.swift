@@ -4,6 +4,9 @@ import Combine
 /// 呼吸セッションの状態機械。
 /// 3分(180秒) = 12秒ループ(吸う4秒/吐く8秒) × 15サイクル。
 /// 終了は「180秒経過後、現在の吐く動作が終わった時点」— 吐き切りで終わる。
+///
+/// 経過時間は壁時計の絶対時刻だけから算出する(一時停止ぶんは除外)。
+/// タイマー発火の間引き(画面ロック/バックグラウンド)で誤差が累積しないようにするため。
 @MainActor
 final class SessionEngine: ObservableObject {
 
@@ -14,6 +17,13 @@ final class SessionEngine: ObservableObject {
         ProcessInfo.processInfo.arguments.contains("-demo30") ? 30 : 180
     static let inhaleDuration: TimeInterval = 4
     static let exhaleDuration: TimeInterval = 8   // 吸:吐 = 1:2 のリラックス比
+    private static var cycle: TimeInterval { inhaleDuration + exhaleDuration }  // 12
+
+    /// 吐き切りで終わる: sessionLength以上で最初に来る「吐く」の終端。
+    /// 180は12の倍数なのでちょうど180s。30(デモ)は36s。
+    private static var effectiveEnd: TimeInterval {
+        (sessionLength / cycle).rounded(.up) * cycle
+    }
 
     @Published private(set) var phase: BreathPhase = .inhale
     @Published private(set) var remaining: Int = Int(sessionLength)
@@ -24,17 +34,23 @@ final class SessionEngine: ObservableObject {
     var onPauseChange: ((Bool) -> Void)?
     var onFinish: (() -> Void)?
 
-    /// 完了済みフェーズの累計時間。一時停止で中断したフェーズは数えない
-    /// (再開は「吸う」の頭からやり直すため)。
-    private var completedTime: TimeInterval = 0
-    private var phaseStart: Date = .now
+    /// 一時停止を除いた実経過時間。現在の稼働区間の開始時刻 + それ以前の累計。
+    private var accumulatedActive: TimeInterval = 0
+    private var segmentStart: Date = .now
     private var timer: Timer?
 
+    /// セッション開始からの実経過秒(一時停止中は進まない)
+    private var elapsed: TimeInterval {
+        accumulatedActive + (isPaused ? 0 : Date.now.timeIntervalSince(segmentStart))
+    }
+
     func start() {
-        completedTime = 0
+        accumulatedActive = 0
+        segmentStart = .now
         isPaused = false
+        phase = .inhale
         remaining = Int(Self.sessionLength)
-        beginPhase(.inhale)
+        phaseRemaining = Int(Self.inhaleDuration)
         let t = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
@@ -44,11 +60,11 @@ final class SessionEngine: ObservableObject {
     }
 
     func stop() {
-        timer?.invalidate()
-        timer = nil
+        invalidate()
         isPaused = false
-        remaining = Int(Self.sessionLength)
+        accumulatedActive = 0
         phase = .inhale
+        remaining = Int(Self.sessionLength)
         phaseRemaining = Int(Self.inhaleDuration)
     }
 
@@ -58,11 +74,9 @@ final class SessionEngine: ObservableObject {
 
     private func pause() {
         guard !isPaused else { return }
-        // 呼吸中(タイマー稼働中)のみ途中経過を累計に確定する。
-        // イントロ中(timer == nil)は呼吸状態に触れない。
+        // 呼吸中(タイマー稼働中)のみ経過を確定する。イントロ中(timer == nil)は時間軸に触れない。
         if timer != nil {
-            let inPhase = Date.now.timeIntervalSince(phaseStart)
-            completedTime += min(inPhase, phaseDuration)
+            accumulatedActive += Date.now.timeIntervalSince(segmentStart)
         }
         isPaused = true
         onPauseChange?(true)
@@ -70,38 +84,46 @@ final class SessionEngine: ObservableObject {
 
     private func resume() {
         guard isPaused else { return }
-        isPaused = false
         if timer != nil {
-            beginPhase(.inhale)   // 再開は常に「吸う」の頭から
+            // 再開は常に「吸う」の頭から: 現在のサイクル先頭にスナップする
+            accumulatedActive = (accumulatedActive / Self.cycle).rounded(.down) * Self.cycle
+            segmentStart = .now
+            phase = .inhale
+            phaseRemaining = Int(Self.inhaleDuration)
+            remaining = max(0, Int((Self.sessionLength - accumulatedActive).rounded(.up)))
         }
+        isPaused = false
         onPauseChange?(false)
     }
 
-    private func beginPhase(_ p: BreathPhase) {
-        phase = p
-        phaseStart = .now
-        phaseRemaining = Int(p == .inhale ? Self.inhaleDuration : Self.exhaleDuration)
-    }
-
-    private var phaseDuration: TimeInterval {
-        phase == .inhale ? Self.inhaleDuration : Self.exhaleDuration
+    private func invalidate() {
+        timer?.invalidate()
+        timer = nil
     }
 
     private func tick() {
         guard !isPaused, timer != nil else { return }
-        let inPhase = Date.now.timeIntervalSince(phaseStart)
-        let elapsed = completedTime + min(inPhase, phaseDuration)
-        remaining = max(0, Int((Self.sessionLength - elapsed).rounded(.up)))
-        phaseRemaining = max(1, Int((phaseDuration - inPhase).rounded(.up)))
+        let e = elapsed
+        remaining = max(0, Int((Self.sessionLength - e).rounded(.up)))
 
-        guard inPhase >= phaseDuration else { return }
-        completedTime += phaseDuration
-
-        if phase == .exhale && completedTime >= Self.sessionLength {
-            stop()
+        // 吐き切りの終端に到達 → 終了(鐘)
+        if e >= Self.effectiveEnd {
+            invalidate()
+            remaining = 0
+            phase = .exhale
+            phaseRemaining = 1
             onFinish?()
             return
         }
-        beginPhase(phase == .inhale ? .exhale : .inhale)
+
+        // 現在位置からフェーズとカウントダウンを導出(累積ドリフト無し)
+        let p = e.truncatingRemainder(dividingBy: Self.cycle)
+        if p < Self.inhaleDuration {
+            phase = .inhale
+            phaseRemaining = max(1, Int((Self.inhaleDuration - p).rounded(.up)))
+        } else {
+            phase = .exhale
+            phaseRemaining = max(1, Int((Self.cycle - p).rounded(.up)))
+        }
     }
 }
