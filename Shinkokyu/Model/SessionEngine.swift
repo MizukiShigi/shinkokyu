@@ -29,6 +29,9 @@ final class SessionEngine: ObservableObject {
     @Published private(set) var remaining: Int = Int(sessionLength)
     /// 現在のフェーズの残り秒(カウントダウン表示用)。4,3,2,1 / 8,7,...,1
     @Published private(set) var phaseRemaining: Int = Int(inhaleDuration)
+    /// 呼吸の進捗。0=収縮(吐き切り) / 1=拡張(吸い切り)。円の拡縮・明度はこれから描画する。
+    /// 壁時計から毎tick算出するので、一時停止でtickが止まれば値も止まる=円もその場で凍結する。
+    @Published private(set) var breath: Double = 0
     @Published private(set) var isPaused = false
 
     var onPauseChange: ((Bool) -> Void)?
@@ -51,6 +54,7 @@ final class SessionEngine: ObservableObject {
         phase = .inhale
         remaining = Int(Self.sessionLength)
         phaseRemaining = Int(Self.inhaleDuration)
+        breath = 0
         let t = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
@@ -66,6 +70,13 @@ final class SessionEngine: ObservableObject {
         phase = .inhale
         remaining = Int(Self.sessionLength)
         phaseRemaining = Int(Self.inhaleDuration)
+        breath = 0
+    }
+
+    /// 0..1 を両端だけ柔らかい曲線へ(吸う/吐くの心地よい加減速)
+    private func eased(_ t: Double) -> Double {
+        let c = min(max(t, 0), 1)
+        return c * c * (3 - 2 * c)
     }
 
     func togglePause() {
@@ -109,18 +120,21 @@ final class SessionEngine: ObservableObject {
             remaining = 0
             phase = .exhale
             phaseRemaining = 1
+            breath = 0
             onFinish?()
             return
         }
 
-        // 現在位置からフェーズとカウントダウンを導出(累積ドリフト無し)
+        // 現在位置からフェーズ・カウントダウン・呼吸進捗を導出(累積ドリフト無し)
         let p = e.truncatingRemainder(dividingBy: Self.cycle)
         if p < Self.inhaleDuration {
             phase = .inhale
             phaseRemaining = max(1, Int((Self.inhaleDuration - p).rounded(.up)))
+            breath = eased(p / Self.inhaleDuration)               // 0 → 1
         } else {
             phase = .exhale
             phaseRemaining = max(1, Int((Self.cycle - p).rounded(.up)))
+            breath = 1 - eased((p - Self.inhaleDuration) / Self.exhaleDuration)  // 1 → 0
         }
     }
 }

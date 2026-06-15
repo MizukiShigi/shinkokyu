@@ -33,8 +33,6 @@ struct SessionView: View {
     @State private var currentPhoto: UIImage?
     @State private var sceneIndex = 0
     @State private var sceneRotation: [ForestScene] = []
-    /// 呼吸円の拡縮はフェーズ変化に明示的に紐付ける(吸う4秒で1.0→1.4 / 吐く8秒で1.4→1.0)
-    @State private var circleExpanded = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// 写真の切替間隔(デモ時は10秒に短縮)
@@ -66,15 +64,6 @@ struct SessionView: View {
     /// 拡縮レンジ。デザイン原案は1.40だが、吸う4秒の移動速度が吐く8秒の2倍になり
     /// 速く感じるため、吸うのピーク速度が「吐くの心地よい速度」と揃う1.28に調整。
     private static let expandedScale: CGFloat = 1.28
-
-    /// 吸うはほぼ等速のなめらかなカーブ(両端だけ柔らかく)でピーク速度を最小に。
-    /// 吐くは好評のease-in-outのまま。
-    private var inhaleAnimation: Animation {
-        .timingCurve(0.45, 0.05, 0.55, 0.95, duration: SessionEngine.inhaleDuration)
-    }
-    private var exhaleAnimation: Animation {
-        .easeInOut(duration: SessionEngine.exhaleDuration)
-    }
 
     var body: some View {
         GeometryReader { geo in
@@ -201,29 +190,11 @@ struct SessionView: View {
             advancePhotoIfNeeded(remaining: remaining)
             fadePhaseLabelIfNeeded(remaining: remaining)
         }
-        .onChange(of: engine.phase) { _, newPhase in
-            guard !engine.isPaused else { return }
-            switch newPhase {
-            case .inhale:
-                withAnimation(inhaleAnimation) { circleExpanded = true }
-            case .exhale:
-                withAnimation(exhaleAnimation) { circleExpanded = false }
-            }
-        }
         .onChange(of: engine.isPaused) { _, paused in
-            // イントロ中: 表示中の文字は凍結したまま、進行時間だけ止めて/再開する。
-            // 呼吸中: 停止で円を基準へ戻し、再開は止めた地点のフェーズに合わせて続ける。
+            // イントロ中だけ、表示中の文字を凍結したまま進行時間を止めて/再開する。
+            // 呼吸中の円は engine.breath が止まることで自然に凍結するので何もしない。
             if introStep != .done {
                 if paused { pauseIntro() } else { resumeIntro() }
-                return
-            }
-            if paused {
-                withAnimation(.easeInOut(duration: 1.0)) { circleExpanded = false }
-            } else {
-                switch engine.phase {
-                case .inhale: withAnimation(inhaleAnimation) { circleExpanded = true }
-                case .exhale: withAnimation(exhaleAnimation) { circleExpanded = false }
-                }
             }
         }
     }
@@ -300,7 +271,6 @@ struct SessionView: View {
         introStep = .done
         onIntroFinished()
         withAnimation(.easeInOut(duration: 0.5)) { introOpacity = 1 }
-        withAnimation(inhaleAnimation) { circleExpanded = true }
     }
 
     /// 経過時間から写真インデックスを求め、進んでいたら次の景へクロスフェード。
@@ -333,9 +303,14 @@ struct SessionView: View {
         withAnimation(.easeInOut(duration: 2.5)) { phaseLabelOpacity = 0 }
     }
 
-    /// 呼吸円: scale 1.00⇄1.28 / 輪郭 55⇄85% / 充填 10⇄18%
+    /// 呼吸円: scale 1.00⇄1.28 / 輪郭 55⇄85% / 充填 10⇄18%。
+    /// 拡縮・明度は engine.breath(0..1)から直接描画する。一時停止で breath が止まれば
+    /// 円もその大きさで凍結する(基準サイズへ収束しない)。
     private var breathingCircle: some View {
-        let scale: CGFloat = reduceMotion ? 1.14 : (circleExpanded ? Self.expandedScale : 1.0)
+        let b = engine.breath
+        let scale: CGFloat = reduceMotion ? 1.14 : 1.0 + (Self.expandedScale - 1.0) * CGFloat(b)
+        let fillOpacity = 0.10 + 0.08 * b
+        let strokeOpacity = 0.55 + 0.30 * b
 
         return ZStack {
             Circle()
@@ -348,13 +323,15 @@ struct SessionView: View {
             // 動くのは円だけ。文字は拡縮の外に置いて固定する
             ZStack {
                 Circle()
-                    .fill(.white.opacity(circleExpanded ? 0.18 : 0.10))
+                    .fill(.white.opacity(fillOpacity))
                     .background(.ultraThinMaterial.opacity(0.5), in: Circle())
                 Circle()
-                    .stroke(.white.opacity(circleExpanded ? 0.85 : 0.55), lineWidth: 1.5)
+                    .stroke(.white.opacity(strokeOpacity), lineWidth: 1.5)
             }
             .frame(width: 176, height: 176)
             .scaleEffect(scale)
+            // 0.1s tick間を滑らかに繋ぐ。停止時は breath が更新されないので自然に止まる
+            .animation(.linear(duration: 0.12), value: b)
 
             // 導入の文字: メッセージ → 3・2・1 (呼吸が始まると消える)
             Group {
