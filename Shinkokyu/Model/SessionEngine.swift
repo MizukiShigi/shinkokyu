@@ -85,12 +85,9 @@ final class SessionEngine: ObservableObject {
     private func resume() {
         guard isPaused else { return }
         if timer != nil {
-            // 再開は常に「吸う」の頭から: 現在のサイクル先頭にスナップする
-            accumulatedActive = (accumulatedActive / Self.cycle).rounded(.down) * Self.cycle
+            // 止めていた地点からそのまま継続する(巻き戻さない=総時間は変わらない)。
+            // フェーズ/残りは次の tick が elapsed から再計算する。
             segmentStart = .now
-            phase = .inhale
-            phaseRemaining = Int(Self.inhaleDuration)
-            remaining = max(0, Int((Self.sessionLength - accumulatedActive).rounded(.up)))
         }
         isPaused = false
         onPauseChange?(false)

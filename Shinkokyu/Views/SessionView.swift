@@ -212,7 +212,7 @@ struct SessionView: View {
         }
         .onChange(of: engine.isPaused) { _, paused in
             // イントロ中: 表示中の文字は凍結したまま、進行時間だけ止めて/再開する。
-            // 呼吸中: 円を基準サイズへ戻す / 吸うの頭から再開する。
+            // 呼吸中: 停止で円を基準へ戻し、再開は止めた地点のフェーズに合わせて続ける。
             if introStep != .done {
                 if paused { pauseIntro() } else { resumeIntro() }
                 return
@@ -220,7 +220,10 @@ struct SessionView: View {
             if paused {
                 withAnimation(.easeInOut(duration: 1.0)) { circleExpanded = false }
             } else {
-                withAnimation(inhaleAnimation) { circleExpanded = true }
+                switch engine.phase {
+                case .inhale: withAnimation(inhaleAnimation) { circleExpanded = true }
+                case .exhale: withAnimation(exhaleAnimation) { circleExpanded = false }
+                }
             }
         }
     }
