@@ -58,11 +58,11 @@ struct HomeView: View {
                             VStack(spacing: 11) {
                                 Text("はじめる")
                                     .font(AppFont.gothic(24, weight: .medium))
-                                    .tracking(4.8)
+                                    .bodyTracking(4.8)
                                     .padding(.leading, 4.8)
                                 Text("3分")
                                     .font(AppFont.gothic(13))
-                                    .tracking(2.6)
+                                    .bodyTracking(2.6)
                                     .padding(.leading, 2.6)
                                     .opacity(0.72)
                             }
@@ -83,7 +83,7 @@ struct HomeView: View {
 
                 Text("今週の森呼吸 \(weekCount)回")
                     .font(AppFont.gothic(12.5))
-                    .tracking(1.75)
+                    .bodyTracking(1.75)
                     .foregroundStyle(isNight ? Palette.wakaba.opacity(0.85) : Palette.textSub)
                     .padding(.bottom, 32)
             }

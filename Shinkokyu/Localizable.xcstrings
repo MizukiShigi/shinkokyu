@@ -1,0 +1,216 @@
+{
+  "sourceLanguage" : "ja",
+  "version" : "1.0",
+  "strings" : {
+    "森呼吸" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "森呼吸" } } }
+    },
+    "しんこきゅう" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "しんこきゅう" } } }
+    },
+    "はじめる" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start" } } }
+    },
+    "3分" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "3 min" } } }
+    },
+    "今週の森呼吸 %lld回" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week: %lld" } } }
+    },
+    "おつかれさまでした" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Well done" } } }
+    },
+    "3分間、深呼吸しました" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "You breathed deeply for 3 minutes." } } }
+    },
+    "とじる" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } } }
+    },
+    "急がず、ひと呼吸してから戻りましょう" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Take a breath before you go back." } } }
+    },
+    "再開" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Resume" } } }
+    },
+    "一時停止" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pause" } } }
+    },
+    "おわる" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "End" } } }
+    },
+    "森の中にいることを\n想像して、ゆっくり\n深呼吸しましょう" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Imagine you're\ndeep in a forest,\nand breathe slowly." } } }
+    },
+    "鼻から吸う" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Breathe in" } } }
+    },
+    "口から吐く" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Breathe out" } } }
+    },
+    "%lld秒" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%llds" } } }
+    },
+    "今週 %lld回" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week: %lld" } } }
+    },
+    "今週の森呼吸の回数。タップしてひと息。" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your weekly breaths. Tap to take one." } } }
+    },
+    "栃木・華厳の滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Kegon Falls, Tochigi" } } }
+    },
+    "京都・嵐山 竹林の小径" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Arashiyama Bamboo Grove, Kyoto" } } }
+    },
+    "京都・嵐山 保津川" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hozugawa River, Kyoto" } } }
+    },
+    "京都・醍醐寺" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Daigo-ji Temple, Kyoto" } } }
+    },
+    "苔の庭" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Moss Garden" } } }
+    },
+    "長野・千畳敷カール" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Senjojiki Cirque, Nagano" } } }
+    },
+    "杉の森" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cedar Forest" } } }
+    },
+    "北海道・美瑛 青い池" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Blue Pond, Biei, Hokkaido" } } }
+    },
+    "長野・上高地 梓川" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Azusa River, Kamikochi, Nagano" } } }
+    },
+    "東京・石神井公園" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shakujii Park, Tokyo" } } }
+    },
+    "東京・井の頭公園" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inokashira Park, Tokyo" } } }
+    },
+    "山形・蔵王 ドッコ沼" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Dokko Pond, Zao, Yamagata" } } }
+    },
+    "山形・蔵王 鳥兜山" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mt. Torikabuto, Zao, Yamagata" } } }
+    },
+    "広島・常清滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Josei Falls, Hiroshima" } } }
+    },
+    "長野・上高地" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Kamikochi, Nagano" } } }
+    },
+    "大阪・箕面大滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Minoo Falls, Osaka" } } }
+    },
+    "長野・白馬" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hakuba, Nagano" } } }
+    },
+    "栃木・おしらじの滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Oshiraji Falls, Tochigi" } } }
+    },
+    "奈良・奈良公園" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Nara Park, Nara" } } }
+    },
+    "奈良・夏の草原" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Summer Meadow, Nara" } } }
+    },
+    "和歌山・那智の滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Nachi Falls, Wakayama" } } }
+    },
+    "長野・駒ヶ根" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Komagane, Nagano" } } }
+    },
+    "神奈川・箱根 芦ノ湖" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Lake Ashi, Hakone, Kanagawa" } } }
+    },
+    "星の森" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Starlit Forest" } } }
+    },
+    "富士山・湖畔" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Lakeside, Mt. Fuji" } } }
+    },
+    "夏空・水のとどろき" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Summer sky, roaring water" } } }
+    },
+    "朝の光・竹の葉ずれ" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Morning light, rustling bamboo" } } }
+    },
+    "新緑・川面の風" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fresh green, river breeze" } } }
+    },
+    "新緑の池庭" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Verdant pond garden" } } }
+    },
+    "雨上がり・小さな滝" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "After the rain, a small fall" } } }
+    },
+    "高山の風" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Alpine wind" } } }
+    },
+    "しっとりした空気" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Moist, still air" } } }
+    },
+    "静かな水面" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Still water" } } }
+    },
+    "澄んだ流れ・秋" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear stream in autumn" } } }
+    },
+    "夏の木立・サギの巣" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Summer grove, heron's nest" } } }
+    },
+    "夏の木道・池のほとり" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Summer boardwalk by the pond" } } }
+    },
+    "新緑・静かな池" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fresh green, quiet pond" } } }
+    },
+    "木立を抜ける小川" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A brook through the trees" } } }
+    },
+    "紅葉の沼" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Autumn pond" } } }
+    },
+    "秋の山並み" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Autumn mountains" } } }
+    },
+    "新緑と滝のしぶき" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fresh green, waterfall spray" } } }
+    },
+    "紅葉の峰と梓川" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Autumn peaks, Azusa River" } } }
+    },
+    "新緑の名瀑" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A great fall in fresh green" } } }
+    },
+    "秋の峰と雲" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Autumn peaks and clouds" } } }
+    },
+    "翡翠の滝壺" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Jade waterfall basin" } } }
+    },
+    "木陰の鹿" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Deer in the shade" } } }
+    },
+    "夏草の丘と青空" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Grassy hill, blue sky" } } }
+    },
+    "夜・梢の星空" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Night sky through the treetops" } } }
+    },
+    "星月夜" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Starlit night" } } }
+    },
+    "夕方の光・滝音" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Evening light, falling water" } } }
+    },
+    "紅葉並木・長い影" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Autumn avenue, long shadows" } } }
+    },
+    "夕雲・湖の鳥居" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Evening clouds, lake torii" } } }
+    }
+  }
+}

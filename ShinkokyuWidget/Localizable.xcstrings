@@ -1,0 +1,15 @@
+{
+  "sourceLanguage" : "ja",
+  "version" : "1.0",
+  "strings" : {
+    "森呼吸" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "森呼吸" } } }
+    },
+    "今週 %lld回" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week: %lld" } } }
+    },
+    "今週の森呼吸の回数。タップしてひと息。" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your weekly breaths. Tap to take one." } } }
+    }
+  }
+}

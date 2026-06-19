@@ -26,7 +26,8 @@ final class NowPlayingController {
     /// セッション開始: 場所名と景の写真をロック画面へ
     func begin(scene: ForestScene, duration: TimeInterval) {
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: scene.place,
+            // 端末の言語に合わせて場所名をローカライズ(ロック画面の表示用)
+            MPMediaItemPropertyTitle: String(localized: String.LocalizationValue(scene.place)),
             MPMediaItemPropertyArtist: "森呼吸",
             MPMediaItemPropertyPlaybackDuration: duration,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: 0.0,

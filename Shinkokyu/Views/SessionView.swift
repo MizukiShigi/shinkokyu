@@ -100,14 +100,14 @@ struct SessionView: View {
                 // ---- コンテンツ (デザイン値: 上86 / 下64) ----
                 VStack(spacing: 0) {
                     VStack(spacing: 9) {
-                        Text(currentScene.place)
+                        Text(LocalizedStringKey(currentScene.place))
                             .font(AppFont.gothic(15))
-                            .tracking(3)
+                            .bodyTracking(3)
                             .padding(.leading, 3)
                             .foregroundStyle(.white.opacity(0.95))
-                        Text(currentScene.info)
+                        Text(LocalizedStringKey(currentScene.info))
                             .font(AppFont.gothic(11.5))
-                            .tracking(2.5)
+                            .bodyTracking(2.5)
                             .padding(.leading, 2.5)
                             .foregroundStyle(.white.opacity(0.65))
                     }
@@ -339,7 +339,7 @@ struct SessionView: View {
                 case .message:
                     Text("森の中にいることを\n想像して、ゆっくり\n深呼吸しましょう")
                         .font(AppFont.mincho(13.5))
-                        .tracking(2)
+                        .bodyTracking(2)
                         .lineSpacing(9)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white.opacity(0.95))
@@ -360,12 +360,12 @@ struct SessionView: View {
                 VStack(spacing: 8) {
                     Text(isInhale ? "鼻から吸う" : "口から吐く")
                         .font(AppFont.gothic(15))
-                        .tracking(3)
+                        .bodyTracking(3)
                         .padding(.leading, 3)
                         .foregroundStyle(.white.opacity(0.95))
                     Text("\(engine.phaseRemaining)秒")
                         .font(AppFont.gothic(11))
-                        .tracking(2)
+                        .bodyTracking(2)
                         .padding(.leading, 2)
                         .monospacedDigit()
                         .foregroundStyle(.white.opacity(0.66))

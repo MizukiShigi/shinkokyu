@@ -20,14 +20,14 @@ struct OkaeriView: View {
 
                 Text("おつかれさまでした")
                     .font(AppFont.mincho(27))
-                    .tracking(4.3)
+                    .bodyTracking(4.3)
                     .padding(.leading, 4.3)
                     .foregroundStyle(Palette.sumi)
                     .padding(.top, 36)
 
                 Text("3分間、深呼吸しました")
                     .font(AppFont.gothic(13.5))
-                    .tracking(1.6)
+                    .bodyTracking(1.6)
                     .padding(.leading, 1.6)
                     .foregroundStyle(Palette.textSub)
                     .padding(.top, 16)
@@ -35,7 +35,7 @@ struct OkaeriView: View {
                 Button(action: onClose) {
                     Text("とじる")
                         .font(AppFont.gothic(14.5))
-                        .tracking(4.35)
+                        .bodyTracking(4.35)
                         .padding(.leading, 4.35)
                         .foregroundStyle(Palette.matsu)
                         .frame(width: 138, height: 50)
@@ -50,7 +50,7 @@ struct OkaeriView: View {
 
                 Text("急がず、ひと呼吸してから戻りましょう")
                     .font(AppFont.gothic(11.5))
-                    .tracking(1.2)
+                    .bodyTracking(1.2)
                     .foregroundStyle(Palette.textSub.opacity(0.8))
                     .padding(.bottom, 32)
             }
