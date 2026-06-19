@@ -26,11 +26,11 @@ For the English **store listing**, a readable name helps discovery. Recommended:
 
 ---
 
-## Promotional text (170 chars, editable anytime without review)
+## Promotional text (170 chars max, editable anytime without review)
 
-> For tired days and sleepless nights. Open the app, tap Start, and let a forest surround
-> you — photos and sounds. Breathe in for 4, out for 8. After 3 minutes, a soft bell ends it.
-> No settings. No accounts.
+> For tired days and sleepless nights. Open the app, tap Start, and a forest surrounds you. Breathe for 3 minutes, then a soft bell ends it. No settings, no accounts.
+
+(164 characters)
 
 ---
 
